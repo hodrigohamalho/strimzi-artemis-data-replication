@@ -1,0 +1,36 @@
+= Strimzi and ActiveMQ Artemis
+
+Strimzi (AMQ Streams)
+
+image::imgs/kafka-replication-schema.jpg[Kafka data replication bi directional]
+
+ActiveMQ Artemis (AMQ Broker)
+
+image::imgs/amq-broker-replication-schema.jpg[AMQ Broker data replication bi directional]
+
+== Operators installed 
+
+* OpenShift User Workload Monitoring
+* AMQ Streams Operator
+* Grafana Operator
+* Prometheus Operator
+* AMQ Broker Operator
+
+== Install The Demo Using Ansible
+
+=== Parameters
+
+[options="header"]
+|=======================
+| Parameter | Example Value                                      | Definition
+| token | sha256~vFanQbthlPKfsaldJT3bdLXIyEkd7ypO_XPygY1DNtQ | access token for a user with cluster-admin privileges
+| server    | https://api.mycluster.opentlc.com:6443      | OpenShift cluster API URL
+|=======================
+
+=== Deploying the demo
+----
+export tkn=REPLACE_ME
+export server=REPLACE_ME
+
+ansible-playbook -e token=${tkn} -e server=${server} playbook.yml
+----
