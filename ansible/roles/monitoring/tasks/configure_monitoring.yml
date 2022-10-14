@@ -1,3 +1,9 @@
+- name: Evaluate Artemis Pod Monitor
+  k8s:
+    state: present
+    namespace: '{{ cluster_project }}'
+    resource_definition: "{{ lookup('template', 'artemis-service-monitor.yml.j2') }}"
+
 - name: Evaluate Pod Monitor
   k8s:
     state: present
@@ -48,8 +54,8 @@
     namespace: '{{ cluster_project}}'
     resource_definition: "{{ lookup('file', 'grafana_kafka_dashboard.yml') }}"
 
-- name: Evaluate One Tap Soccer Dashboard
+- name: Evaluate Artemis Dashboard
   k8s:
     state: present
-    namespace: '{{ cluster_project}}'
-    resource_definition: "{{ lookup('file', 'onetapsoccer-dashboards.yml') }}"
+    namespace: '{{ cluster_project }}'
+    resource_definition: "{{ lookup('file', 'grafana-artemis-dashboard.yml') }}"
