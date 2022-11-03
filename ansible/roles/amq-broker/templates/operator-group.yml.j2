@@ -1,8 +1,9 @@
 apiVersion: operators.coreos.com/v1
 kind: OperatorGroup
 metadata:
-  name: {{ cluster_project }}-operator-group
-  namespace: {{ cluster_project }}
+  name: {{ dc_a_namespace }}-operator-group
+  namespace: {{ dc_a_namespace }}
 spec:
   targetNamespaces:
-  - {{ cluster_project }}
+  - {{ dc_a_namespace }}
+  - {{ dc_b_namespace }}

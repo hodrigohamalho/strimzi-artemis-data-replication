@@ -1,20 +1,32 @@
-- name: Evaluate Artemis Pod Monitor
+- name: Evaluate Artemis Pod Monitor - DC A
   k8s:
     state: present
-    namespace: '{{ cluster_project }}'
-    resource_definition: "{{ lookup('template', 'artemis-service-monitor.yml.j2') }}"
+    namespace: '{{ dc_a_namespace }}'
+    resource_definition: "{{ lookup('template', 'artemis-service-monitor-dc-a.yml.j2') }}"
 
-- name: Evaluate Pod Monitor
+- name: Evaluate Artemis Pod Monitor - DC B
   k8s:
     state: present
-    namespace: '{{ cluster_project}}'
-    resource_definition: "{{ lookup('template', 'strimzi_pod_monitor.yml.j2') }}"
+    namespace: '{{ dc_b_namespace }}'
+    resource_definition: "{{ lookup('template', 'artemis-service-monitor-dc-b.yml.j2') }}"
+
+- name: Evaluate Strimzi Pod Monitor - DC A
+  k8s:
+    state: present
+    namespace: '{{ dc_a_namespace }}'
+    resource_definition: "{{ lookup('template', 'strimzi_pod_monitor-dc-a.yml.j2') }}"
+
+- name: Evaluate Strimzi Pod Monitor - DC B
+  k8s:
+    state: present
+    namespace: '{{ dc_b_namespace }}'
+    resource_definition: "{{ lookup('template', 'strimzi_pod_monitor-dc-b.yml.j2') }}"
 
 - name: Get Grafana ServiceAccount
   k8s_info:
     kind: ServiceAccount
     name:  grafana-serviceaccount
-    namespace: '{{ cluster_project }}'
+    namespace: '{{ dc_a_namespace }}'
     api_version: v1
   register: r_grafana_sa
   until:
@@ -41,21 +53,22 @@
       subjects:
       - kind: ServiceAccount
         name: grafana-serviceaccount
-        namespace: '{{ cluster_project }}'
+        namespace: '{{ dc_a_namespace }}'
 
 - name: Evaluate Grafana Datasource
   k8s:
+    namespace: '{{ dc_a_namespace }}'
     state: present
     resource_definition: "{{ lookup('template', 'grafana_datasource.yml.j2') }}"
 
 - name: Evaluate Kafka Dashboard
   k8s:
     state: present
-    namespace: '{{ cluster_project}}'
+    namespace: '{{ dc_a_namespace }}'
     resource_definition: "{{ lookup('file', 'grafana_kafka_dashboard.yml') }}"
 
-- name: Evaluate Artemis Dashboard
-  k8s:
-    state: present
-    namespace: '{{ cluster_project }}'
-    resource_definition: "{{ lookup('file', 'grafana-artemis-dashboard.yml') }}"
+# - name: Evaluate Artemis Dashboard
+#   k8s:
+#     state: present
+#     namespace: '{{ dc_a_namespace }}'
+#     resource_definition: "{{ lookup('file', 'grafana-artemis-dashboard.yml') }}"

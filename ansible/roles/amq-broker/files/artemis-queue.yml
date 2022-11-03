@@ -1,10 +1,10 @@
 apiVersion: broker.amq.io/v1beta1
 kind: ActiveMQArtemisAddress
 metadata:
-  name: chat-bot
+  name: events
 spec:
-  addressName: chat-bot
-  queueName: chat-bot
+  addressName: events
+  queueName: events
   routingType: anycast
   removeFromBrokerOnDelete: true
 

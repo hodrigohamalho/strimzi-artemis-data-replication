@@ -66,17 +66,11 @@ spec:
               protocol: TCP
           env:
             - name: KAFKA_CLUSTERS_0_NAME
-              value: {{ kafka_cluster_name }}
+              value: {{ kafka_cluster_a }}
             - name: KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS
-              value: '{{ kafka_cluster_name }}-kafka-bootstrap:9092'
+              value: '{{ kafka_cluster_a }}-kafka-bootstrap:9092'
             - name: KAFKA_CLUSTERS_0_ZOOKEEPER
-              value: '{{ kafka_cluster_name }}-zookeeper-client:2181'
-            - name: KAFKA_CLUSTERS_0_PROPERTIES_SECURITY_PROTOCOL
-              value: SASL_PLAINTEXT
-            - name: KAFKA_CLUSTERS_0_PROPERTIES_SASL_MECHANISM
-              value: PLAIN
-            - name: KAFKA_CLUSTERS_0_PROPERTIES_SASL_JAAS_CONFIG
-              value: 'org.apache.kafka.common.security.plain.PlainLoginModule required username="event-consumer" password="E6FAktKnF884";'
+              value: '{{ kafka_cluster_a }}-zookeeper-client:2181'
           imagePullPolicy: Always
       restartPolicy: Always
       terminationGracePeriodSeconds: 30

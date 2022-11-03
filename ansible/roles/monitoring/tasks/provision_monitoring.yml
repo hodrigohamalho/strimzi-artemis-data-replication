@@ -28,17 +28,18 @@
     definition:
       metadata:
         name: grafana-operator
-        namespace: '{{ cluster_project }}'
+        namespace: '{{ dc_a_namespace }}'
       spec:
         channel: v4
         installPlanApproval: Automatic
         name: grafana-operator
         source: community-operators
         sourceNamespace: openshift-marketplace
-        startingCSV: grafana-operator.v4.6.0
+        startingCSV: grafana-operator.v4.7.1
+        
 
 - name: Wait for Grafana Subscription to complete
-  shell: set -o pipefail && oc get csv -n {{ cluster_project }} | grep grafana-operator
+  shell: set -o pipefail && oc get csv -n {{ dc_a_namespace }} | grep grafana-operator
   register: install_status
   until: "'Succeeded' in install_status.stdout"
   retries: 20
@@ -49,4 +50,5 @@
 - name: Evaluate Grafana Instance
   k8s:
     state: present
+    namespace: '{{ dc_a_namespace }}'
     resource_definition: "{{ lookup('template', 'grafana_instance.yml.j2') }}"

@@ -1,45 +1,27 @@
 apiVersion: kafka.strimzi.io/v1beta2
 kind: Kafka
 metadata:
-  name: {{ kafka_cluster_name }}
+  name: my-target-cluster
 spec:
   kafka:
-    rack:
-      topologyKey: topology.kubernetes.io/zone
-    version: 3.1.0
+    version: 3.2.3
     replicas: 3
-    authorization:
-      type: simple
     listeners:
       - name: plain
         port: 9092
         type: internal
         tls: false
-        authentication:
-          type: scram-sha-512
       - name: tls
         port: 9093
         type: internal
         tls: true
-      - name: external
-        port: 9094
-        type: route
-        tls: true
-        authentication:
-          type: scram-sha-512
-    readinessProbe:
-      initialDelaySeconds: 15
-      timeoutSeconds: 5
-    livenessProbe:
-      initialDelaySeconds: 15
-      timeoutSeconds: 5
     config:
-      offsets.topic.replication.factor: 3
-      transaction.state.log.replication.factor: 3
-      transaction.state.log.min.isr: 2
-      default.replication.factor: 3
-      min.insync.replicas: 2
-      inter.broker.protocol.version: "3.1"
+      offsets.topic.replication.factor: 1
+      transaction.state.log.replication.factor: 1
+      transaction.state.log.min.isr: 1
+      default.replication.factor: 1
+      min.insync.replicas: 1
+      inter.broker.protocol.version: "3.2"
     storage:
       type: jbod
       volumes:
@@ -54,15 +36,7 @@ spec:
           name: kafka-metrics
           key: kafka-metrics-config.yml
   zookeeper:
-    rack:
-      topologyKey: topology.kubernetes.io/zone
     replicas: 3
-    readinessProbe:
-      initialDelaySeconds: 15
-      timeoutSeconds: 5
-    livenessProbe:
-      initialDelaySeconds: 15
-      timeoutSeconds: 5
     storage:
       type: persistent-claim
       size: 3Gi

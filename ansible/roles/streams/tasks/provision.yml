@@ -6,11 +6,12 @@
 #     kind: OperatorGroup
 #     definition:
 #       metadata:
-#         name: '{{ cluster_project }}-operatorgroup'
-#         namespace: '{{ cluster_project}}'
+#         name: '{{ dc_a_namespace }}-operatorgroup'
+#         namespace: '{{ dc_a_namespace}}'
 #       spec:
 #         targetNamespaces:
-#         - '{{ cluster_project }}'
+#         - '{{ dc_a_namespace }}'
+#         - '{{ dc_b_namespace }}'
 
 # - name: Evaluate AMQ Streams Operator
 #   k8s:
@@ -20,7 +21,7 @@
 #     definition:
 #       metadata:
 #         name: amq-streams
-#         namespace: '{{ cluster_project }}'
+#         namespace: '{{ dc_a_namespace }}'
 #       spec:
 #         channel: stable
 #         installPlanApproval: Automatic
@@ -30,7 +31,7 @@
 #         startingCSV: amqstreams.v2.0.0-0
 
 # - name: Waiting for AMQ Streams operator to install
-#   shell: set -o pipefail && oc get csv -n {{ cluster_project }} | grep amqstreams
+#   shell: set -o pipefail && oc get csv -n {{ dc_a_namespace }} | grep amqstreams
 #   register: install_status
 #   until: "'Succeeded' in install_status.stdout"
 #   retries: 20
@@ -38,21 +39,34 @@
 #   args:
 #     executable: /bin/bash
 
-- name: Evaluate Cluster ConfigMap
+- name: Evaluate Cluster ConfigMap - DC A
   k8s:
     state: present
-    namespace: '{{ cluster_project }}'
+    namespace: '{{ dc_a_namespace }}'
+    resource_definition: "{{ lookup('file', 'metrics-cm.yml') }}"
+
+- name: Evaluate Cluster ConfigMap - DC B
+  k8s:
+    state: present
+    namespace: '{{ dc_b_namespace }}'
     resource_definition: "{{ lookup('file', 'metrics-cm.yml') }}"
 
 
-- name: Evaluate Cluster Instance
+- name: Evaluate Cluster Kafka Instance in DC A
   k8s:
     state: present
-    namespace: '{{ cluster_project }}'
-    resource_definition: "{{ lookup('template', 'cluster.yml.j2') }}"
+    namespace: '{{ dc_a_namespace }}'
+    resource_definition: "{{ lookup('template', 'kafka-cluster-a.yml.j2') }}"
 
-- name: Waiting for Cluster instance to be ready
-  shell: set -o pipefail && oc get kafka -n {{ cluster_project }} | grep {{ kafka_cluster_name }}
+- name: Evaluate Cluster Kafka Instance in DC B
+  k8s:
+    state: present
+    namespace: '{{ dc_b_namespace }}'
+    resource_definition: "{{ lookup('template', 'kafka-cluster-b.yml.j2') }}"
+
+
+- name: Waiting for Kafka cluster in DC A to be ready
+  shell: set -o pipefail && oc get kafka -n {{ dc_a_namespace }} | grep {{ kafka_cluster_a }}
   register: install_status
   until: "'True' in install_status.stdout"
   retries: 20
@@ -60,20 +74,59 @@
   args:
     executable: /bin/bash
 
-- name: Evaluate User Producer
-  k8s:
-    state: present
-    namespace: '{{ cluster_project }}'
-    resource_definition: "{{ lookup('template', 'event-consumer-user.yml.j2') }}"
+- name: Waiting for Kafka cluster in DC B to be ready
+  shell: set -o pipefail && oc get kafka -n {{ dc_b_namespace }} | grep {{ kafka_cluster_b }}
+  register: install_status
+  until: "'True' in install_status.stdout"
+  retries: 20
+  delay: 15
+  args:
+    executable: /bin/bash
 
 - name: Evaluate events Topic
   k8s:
     state: present
-    namespace: '{{ cluster_project }}'
+    namespace: '{{ dc_a_namespace }}'
     resource_definition: "{{ lookup('template', 'events-topic.yml.j2') }}"
 
-- name: Install Kafka UI
+- name: Install Kafka UI in DC A
   k8s:
     state: present
-    namespace: '{{ cluster_project }}'
-    resource_definition: "{{ lookup('template', 'kafka-ui.yml.j2') }}"
+    namespace: '{{ dc_a_namespace }}'
+    resource_definition: "{{ lookup('template', 'kafka-ui-cluster-a.yml.j2') }}"
+
+- name: Install Kafka UI in DC B
+  k8s:
+    state: present
+    namespace: '{{ dc_b_namespace }}'
+    resource_definition: "{{ lookup('template', 'kafka-ui-cluster-b.yml.j2') }}"
+
+- name: Create topic events in Kafka DC A
+  k8s:
+    state: present
+    namespace: '{{ dc_a_namespace }}'
+    resource_definition: "{{ lookup('template', 'events-topic.yml.j2') }}"
+
+- name: Evaluate Mirror Maker in Kafka DC B
+  k8s:
+    state: present
+    namespace: '{{ dc_b_namespace }}'
+    resource_definition: "{{ lookup('template', 'mirror-maker.yml.j2') }}"
+
+- name: Install Producer in DC A
+  k8s:
+    state: present
+    namespace: '{{ dc_a_namespace }}'
+    resource_definition: "{{ lookup('template', 'producer.yml.j2') }}"
+
+- name: Install Consumer in DC A
+  k8s:
+    state: present
+    namespace: '{{ dc_a_namespace }}'
+    resource_definition: "{{ lookup('template', 'consumer-dc-a.yml.j2') }}"
+
+- name: Install Consumer in DC B
+  k8s:
+    state: present
+    namespace: '{{ dc_b_namespace }}'
+    resource_definition: "{{ lookup('template', 'consumer-dc-b.yml.j2') }}"

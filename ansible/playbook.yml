@@ -1,8 +1,12 @@
 - hosts: localhost
-  name: Install AMQ Streams Monitoring Demo
+  name: Install AMQ Streams and Strimzi Data Replication Demo
   vars:
-    cluster_project: kafka-cluster
-    kafka_cluster_name: kafka-cluster
+    kafka_cluster_a: my-source-cluster
+    kafka_cluster_b: my-target-cluster
+    artemis_cluster_a: my-source-cluster
+    artemis_cluster_b: my-source-cluster
+    dc_a_namespace: data-center-a
+    dc_b_namespace: data-center-b
     grafana_user: admin
     grafana_password: admin
     insecure_skip_tls_verify: true
@@ -20,14 +24,23 @@
        - server is defined
       ignore_errors: false
     
-    - name: Evaluate {{ cluster_project }} Namespace
+    - name: Evaluate Data Center A Namespace
       k8s:
         state: present
         kind: Project
         api_version: project.openshift.io/v1
         definition:
           metadata:
-            name: "{{ cluster_project }}"
+            name: "{{ dc_a_namespace }}"
+
+    - name: Evaluate Data Center B Namespace
+      k8s:
+        state: present
+        kind: Project
+        api_version: project.openshift.io/v1
+        definition:
+          metadata:
+            name: "{{ dc_b_namespace }}"
 
     - name: Include AMQ Streams role
       include_role:
