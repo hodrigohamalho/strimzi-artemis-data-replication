@@ -40,16 +40,16 @@
           metadata:
             name: "{{ dc_b_namespace }}"
 
-    # - name: Include AMQ Streams role
-    #   include_role:
-    #     name: streams
+    - name: Include AMQ Streams role
+      include_role:
+        name: streams
 
     # - name: Include AMQ Broker role
     #   include_role:
     #     name: amq-broker
 
-    - name: Include Monitoring role
-      include_role:
-        name: monitoring
+    # - name: Include Monitoring role
+    #   include_role:
+    #     name: monitoring
     
     
