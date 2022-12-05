@@ -1,5 +1,8 @@
 - name: Evaluate Artemis Pod Monitor - DC A
   k8s:
+    host: "{{ dc_a_server }}"
+    api_key: "{{ dc_a_token }}"
+    validate_certs: false
     state: present
     namespace: '{{ dc_a_namespace }}'
     resource_definition: "{{ lookup('template', 'artemis-service-monitor-dc-a.yml.j2') }}"
@@ -12,18 +15,27 @@
 
 - name: Evaluate Strimzi Pod Monitor - DC A
   k8s:
+    host: "{{ dc_a_server }}"
+    api_key: "{{ dc_a_token }}"
+    validate_certs: false
     state: present
     namespace: '{{ dc_a_namespace }}'
     resource_definition: "{{ lookup('template', 'strimzi_pod_monitor-dc-a.yml.j2') }}"
 
 - name: Evaluate Strimzi Pod Monitor - DC B
   k8s:
+    host: "{{ dc_b_server }}"
+    api_key: "{{ dc_b_token }}"
+    validate_certs: false
     state: present
     namespace: '{{ dc_b_namespace }}'
     resource_definition: "{{ lookup('template', 'strimzi_pod_monitor-dc-b.yml.j2') }}"
 
-- name: Get Grafana ServiceAccount
+- name: Get Grafana ServiceAccount - DC A
   k8s_info:
+    host: '{{ dc_a_server }}'
+    api_key: '{{ dc_a_token }}'
+    validate_certs: false
     kind: ServiceAccount
     name:  grafana-serviceaccount
     namespace: '{{ dc_a_namespace }}'
@@ -34,12 +46,15 @@
   retries: 10
   delay: 15
 
-- name: Loop Secrets
-  include_tasks: tasks/loop_secrets.yml
+- name: Loop Secrets - DC A
+  include_tasks: tasks/loop_secrets_dc_a.yml
   with_items: '{{ r_grafana_sa.resources[0].secrets  }}'
 
-- name: Evaluate Grafana ServiceAccount permissons
+- name: Evaluate Grafana ServiceAccount permissons - DC A
   k8s:
+    host: "{{ dc_a_server }}"
+    api_key: "{{ dc_a_token }}"
+    validate_certs: false
     state: present
     api_version: rbac.authorization.k8s.io/v1
     kind: ClusterRoleBinding
@@ -55,20 +70,95 @@
         name: grafana-serviceaccount
         namespace: '{{ dc_a_namespace }}'
 
-- name: Evaluate Grafana Datasource
+- name: Evaluate Grafana Datasource - DC A
   k8s:
+    host: "{{ dc_a_server }}"
+    api_key: "{{ dc_a_token }}"
+    validate_certs: false
     namespace: '{{ dc_a_namespace }}'
     state: present
-    resource_definition: "{{ lookup('template', 'grafana_datasource.yml.j2') }}"
+    resource_definition: "{{ lookup('template', 'grafana-datasource-dc-a.yml.j2') }}"
 
-- name: Evaluate Kafka Dashboard
+- name: Evaluate Kafka Dashboard - DC A
   k8s:
+    host: "{{ dc_a_server }}"
+    api_key: "{{ dc_a_token }}"
+    validate_certs: false
     state: present
     namespace: '{{ dc_a_namespace }}'
     resource_definition: "{{ lookup('file', 'grafana_kafka_dashboard.yml') }}"
-
-# - name: Evaluate Artemis Dashboard
+  
+# - name: Evaluate Artemis Dashboard - DC A
 #   k8s:
+#     host: "{{ dc_a_server }}"
+#     api_key: "{{ dc_a_token }}"
+#     validate_certs: false
 #     state: present
 #     namespace: '{{ dc_a_namespace }}'
+#     resource_definition: "{{ lookup('file', 'grafana-artemis-dashboard.yml') }}"
+
+- name: Get Grafana ServiceAccount - DC B
+  k8s_info:
+    host: "{{ dc_b_server }}"
+    api_key: "{{ dc_b_token }}"
+    validate_certs: false
+    kind: ServiceAccount
+    name:  grafana-serviceaccount
+    namespace: '{{ dc_b_namespace }}'
+    api_version: v1
+  register: r_grafana_sa
+  until:
+    - r_grafana_sa.resources is defined
+  retries: 10
+  delay: 15
+
+- name: Loop Secrets - DC B
+  include_tasks: tasks/loop_secrets_dc_b.yml
+  with_items: '{{ r_grafana_sa.resources[0].secrets  }}'
+
+- name: Evaluate Grafana ServiceAccount permissons - DC B
+  k8s:
+    host: "{{ dc_b_server }}"
+    api_key: "{{ dc_b_token }}"
+    validate_certs: false
+    state: present
+    api_version: rbac.authorization.k8s.io/v1
+    kind: ClusterRoleBinding
+    definition:
+      metadata:
+        name: thanos-metric-viewer
+      roleRef:
+        apiGroup: rbac.authorization.k8s.io
+        kind: ClusterRole
+        name: cluster-monitoring-view
+      subjects:
+      - kind: ServiceAccount
+        name: grafana-serviceaccount
+        namespace: '{{ dc_b_namespace }}'
+
+- name: Evaluate Grafana Datasource - DC B
+  k8s:
+    host: "{{ dc_b_server }}"
+    api_key: "{{ dc_b_token }}"
+    validate_certs: false
+    namespace: '{{ dc_b_namespace }}'
+    state: present
+    resource_definition: "{{ lookup('template', 'grafana-datasource-dc-b.yml.j2') }}"
+
+- name: Evaluate Kafka Dashboard - DC B
+  k8s:
+    host: "{{ dc_b_server }}"
+    api_key: "{{ dc_b_token }}"
+    validate_certs: false
+    state: present
+    namespace: '{{ dc_b_namespace }}'
+    resource_definition: "{{ lookup('file', 'grafana_kafka_dashboard.yml') }}"
+
+# - name: Evaluate Artemis Dashboard - DC B
+#   k8s:
+#     host: "{{ dc_b_server }}"
+#     api_key: "{{ dc_b_token }}"
+#     validate_certs: false
+#     state: present
+#     namespace: '{{ dc_b_namespace }}'
 #     resource_definition: "{{ lookup('file', 'grafana-artemis-dashboard.yml') }}"

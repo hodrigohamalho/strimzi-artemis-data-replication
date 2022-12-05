@@ -24,9 +24,9 @@ spec:
         imagePullPolicy: IfNotPresent
         env:
           - name: BOOTSTRAP_SERVERS
-            value: {{ kafka_cluster_a }}-kafka-bootstrap:9092
+            value: {{ dc_a_kafka_cluster }}-kafka-bootstrap:9092
           - name: TOPIC
-            value: {{ kafka_cluster_a }}.events
+            value: {{ dc_a_kafka_cluster }}.events
           - name: GROUP_ID
             value: consumer-app-b
           - name: LOG_LEVEL

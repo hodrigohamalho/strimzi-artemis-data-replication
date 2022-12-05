@@ -1,5 +1,8 @@
-- name: Evaluate User Workload Monitoring
+- name: Evaluate User Workload Monitoring - DC A
   k8s:
+    host: "{{ dc_a_server }}"
+    api_key: "{{ dc_a_token }}"
+    validate_certs: false
     state: present
     kind: ConfigMap
     api_version: v1
@@ -20,35 +23,112 @@
                   requests:
                     storage: 20Gi
 
-- name: Evaluate Grafana Operator
+- name: Evaluate User Workload Monitoring - DC B
   k8s:
+    host: "{{ dc_b_server }}"
+    api_key: "{{ dc_b_token }}"
+    validate_certs: false
     state: present
-    kind: Subscription
-    api_version: operators.coreos.com/v1alpha1
+    kind: ConfigMap
+    api_version: v1
     definition:
       metadata:
-        name: grafana-operator
-        namespace: '{{ dc_a_namespace }}'
-      spec:
-        channel: v4
-        installPlanApproval: Automatic
-        name: grafana-operator
-        source: community-operators
-        sourceNamespace: openshift-marketplace
-        startingCSV: grafana-operator.v4.7.1
+        name: cluster-monitoring-config
+        namespace: openshift-monitoring
+      data:
+        config.yaml: |
+          enableUserWorkload: true
+          prometheusK8s:
+            volumeClaimTemplate:
+              metadata:
+                name: prometheusdb
+              spec:
+                storageClassName: gp2
+                resources:
+                  requests:
+                    storage: 20Gi
+
+# - name: Evaluate Grafana Operator - DC A
+#   k8s:
+#     host: "{{ dc_a_server }}"
+#     api_key: "{{ dc_a_token }}"
+#     validate_certs: false
+#     state: present
+#     kind: Subscription
+#     api_version: operators.coreos.com/v1alpha1
+#     definition:
+#       metadata:
+#         name: grafana-operator
+#         namespace: '{{ dc_a_namespace }}'
+#       spec:
+#         channel: v4
+#         installPlanApproval: Automatic
+#         name: grafana-operator
+#         source: community-operators
+#         sourceNamespace: openshift-marketplace
+#         startingCSV: grafana-operator.v4.7.1
+
+# - name: Evaluate Grafana Operator - DC B
+#   k8s:
+#     host: "{{ dc_b_server }}"
+#     api_key: "{{ dc_b_token }}"
+#     validate_certs: false
+#     state: present
+#     kind: Subscription
+#     api_version: operators.coreos.com/v1alpha1
+#     definition:
+#       metadata:
+#         name: grafana-operator
+#         namespace: '{{ dc_b_namespace }}'
+#       spec:
+#         channel: v4
+#         installPlanApproval: Automatic
+#         name: grafana-operator
+#         source: community-operators
+#         sourceNamespace: openshift-marketplace
+#         startingCSV: grafana-operator.v4.7.1
         
 
-- name: Wait for Grafana Subscription to complete
-  shell: set -o pipefail && oc get csv -n {{ dc_a_namespace }} | grep grafana-operator
-  register: install_status
-  until: "'Succeeded' in install_status.stdout"
-  retries: 20
-  delay: 15
-  args:
-    executable: /bin/bash
+# - name: Login DC A as super user with token on OpenShift 4
+#   command: "oc login --token={{ dc_b_token }}  --server={{ dc_b_server }} --insecure-skip-tls-verify={{ insecure_skip_tls_verify }}"
+#   ignore_errors: false
 
-- name: Evaluate Grafana Instance
+# - name: Wait for Grafana Subscription to complete
+#   shell: set -o pipefail && oc get csv -n {{ dc_a_namespace }} --server={{ dc_a_server }} | grep grafana-operator
+#   register: install_status
+#   until: "'Succeeded' in install_status.stdout"
+#   retries: 20
+#   delay: 15
+#   args:
+#     executable: /bin/bash
+
+# - name: Login DC B as super user with token on OpenShift 4
+#   command: "oc login --token={{ dc_b_token }}  --server={{ dc_b_server }} --insecure-skip-tls-verify={{ insecure_skip_tls_verify }}"
+#   ignore_errors: false
+
+# - name: Wait for Grafana Subscription to complete
+#   shell: set -o pipefail && oc get csv -n {{ dc_b_namespace }} --server={{ dc_b_server }} | grep grafana-operator
+#   register: install_status
+#   until: "'Succeeded' in install_status.stdout"
+#   retries: 20
+#   delay: 15
+#   args:
+#     executable: /bin/bash
+
+- name: Evaluate Grafana Instance DC A
   k8s:
+    host: "{{ dc_a_server }}"
+    api_key: "{{ dc_a_token }}"
+    validate_certs: false
     state: present
     namespace: '{{ dc_a_namespace }}'
+    resource_definition: "{{ lookup('template', 'grafana_instance.yml.j2') }}"
+
+- name: Evaluate Grafana Instance DC B
+  k8s:
+    host: "{{ dc_b_server }}"
+    api_key: "{{ dc_b_token }}"
+    validate_certs: false
+    state: present
+    namespace: '{{ dc_b_namespace }}'
     resource_definition: "{{ lookup('template', 'grafana_instance.yml.j2') }}"

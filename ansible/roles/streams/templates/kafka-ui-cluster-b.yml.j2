@@ -66,11 +66,11 @@ spec:
               protocol: TCP
           env:
             - name: KAFKA_CLUSTERS_0_NAME
-              value: {{ kafka_cluster_b }}
+              value: {{ dc_b_kafka_cluster }}
             - name: KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS
-              value: '{{ kafka_cluster_b }}-kafka-bootstrap:9092'
+              value: '{{ dc_b_kafka_cluster }}-kafka-bootstrap:9092'
             - name: KAFKA_CLUSTERS_0_ZOOKEEPER
-              value: '{{ kafka_cluster_b }}-zookeeper-client:2181'
+              value: '{{ dc_b_kafka_cluster }}-zookeeper-client:2181'
           imagePullPolicy: Always
       restartPolicy: Always
       terminationGracePeriodSeconds: 30

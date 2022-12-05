@@ -25,18 +25,27 @@
 
 - name: Evaluate AMQ Broker instance - DC A
   k8s:
+    host: "{{ dc_a_server }}"
+    api_key: "{{ dc_a_token }}"
+    validate_certs: false
     state: present
     namespace: '{{ dc_a_namespace }}'
     resource_definition: "{{ lookup('template', 'artemis-cluster-a.yml.j2') }}"
 
 - name: Evaluate AMQ Broker instance - DC B
   k8s:
+    host: "{{ dc_b_server }}"
+    api_key: "{{ dc_b_token }}"
+    validate_certs: false
     state: present
     namespace: '{{ dc_b_namespace }}'
     resource_definition: "{{ lookup('template', 'artemis-cluster-b.yml.j2') }}"
 
-- name: Evaluate AMQ Broker Queue
+- name: Evaluate AMQ Broker Queue - DC A
   k8s:
+    host: "{{ dc_a_server }}"
+    api_key: "{{ dc_a_token }}"
+    validate_certs: false
     state: present
     namespace: '{{ dc_a_namespace }}'
     resource_definition: "{{ lookup('file', 'artemis-queue.yml') }}"

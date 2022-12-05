@@ -1,31 +1,26 @@
 - hosts: localhost
   name: Install AMQ Streams and Strimzi Data Replication Demo
   vars:
-    kafka_cluster_a: my-source-cluster
-    kafka_cluster_b: my-target-cluster
-    artemis_cluster_a: my-source-cluster
-    artemis_cluster_b: my-source-cluster
+    dc_a_server: https://api.cluster-578cf.578cf.sandbox1078.opentlc.com:6443
+    dc_b_server: https://api.cluster-h9xg5.h9xg5.sandbox72.opentlc.com:6443
+    dc_a_kafka_cluster: my-source-cluster
+    dc_b_kafka_cluster: my-target-cluster
+    dc_a_artemis_cluster: my-source-cluster
+    dc_b_artemis_cluster: my-target-cluster
     dc_a_namespace: data-center-a
     dc_b_namespace: data-center-b
     grafana_user: admin
     grafana_password: admin
     insecure_skip_tls_verify: true
     delete_demo: false
+
   tasks:
 
-    - name: Define domain
-      set_fact:
-        domain : "{{ server | regex_replace('https://api.') | regex_replace(':6443')   }}"
-
-    - name: login as super user with token on OpenShift 4
-      command: "oc login --token={{ token }}  --server={{ server }} --insecure-skip-tls-verify={{ insecure_skip_tls_verify }}"
-      when:
-       - token is defined
-       - server is defined
-      ignore_errors: false
-    
     - name: Evaluate Data Center A Namespace
       k8s:
+        host: "{{ dc_a_server }}"
+        api_key: "{{ dc_a_token }}"
+        validate_certs: false
         state: present
         kind: Project
         api_version: project.openshift.io/v1
@@ -35,6 +30,9 @@
 
     - name: Evaluate Data Center B Namespace
       k8s:
+        api_key: "{{ dc_b_token }}"
+        host: "{{ dc_b_server }}"
+        validate_certs: false
         state: present
         kind: Project
         api_version: project.openshift.io/v1
@@ -42,13 +40,13 @@
           metadata:
             name: "{{ dc_b_namespace }}"
 
-    - name: Include AMQ Streams role
-      include_role:
-        name: streams
+    # - name: Include AMQ Streams role
+    #   include_role:
+    #     name: streams
 
-    - name: Include AMQ Broker role
-      include_role:
-        name: amq-broker
+    # - name: Include AMQ Broker role
+    #   include_role:
+    #     name: amq-broker
 
     - name: Include Monitoring role
       include_role:

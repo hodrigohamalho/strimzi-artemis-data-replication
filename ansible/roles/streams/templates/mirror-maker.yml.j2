@@ -8,9 +8,9 @@ spec:
   connectCluster: "my-target-cluster"
   clusters:
   - alias: "my-source-cluster"
-    bootstrapServers: {{ kafka_cluster_a }}-kafka-bootstrap.{{ dc_a_namespace }}.svc.cluster.local:9092
+    bootstrapServers: {{ dc_a_kafka_cluster }}-kafka-bootstrap.{{ dc_a_namespace }}.svc.cluster.local:9092
   - alias: "my-target-cluster"
-    bootstrapServers: {{ kafka_cluster_b }}-kafka-bootstrap.{{ dc_b_namespace }}.svc.cluster.local:9092
+    bootstrapServers: {{ dc_b_kafka_cluster }}-kafka-bootstrap.{{ dc_b_namespace }}.svc.cluster.local:9092
     config:
       # -1 means it will use the default replication factor configured in the broker
       config.storage.replication.factor: -1
