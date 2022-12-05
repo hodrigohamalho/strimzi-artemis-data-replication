@@ -1,4 +1,4 @@
-- name: Evaluate Operator Group DC - A
+- name: (DC A) Evaluate Operator Group
   k8s:
     host: "{{ dc_a_server }}"
     api_key: "{{ dc_a_token }}"
@@ -14,7 +14,7 @@
         targetNamespaces:
         - '{{ dc_a_namespace }}'
 
-- name: Evaluate AMQ Streams Operator DC - A
+- name: (DC A) Evaluate AMQ Streams Operator
   k8s:
     host: "{{ dc_a_server }}"
     api_key: "{{ dc_a_token }}"
@@ -34,7 +34,7 @@
         sourceNamespace: openshift-marketplace
         startingCSV: amqstreams.v2.2.0-3
 
-- name: Evaluate Operator Group - DC B
+- name: (DC B) Evaluate Operator Group
   k8s:
     host: "{{ dc_b_server }}"
     api_key: "{{ dc_b_token }}"
@@ -50,7 +50,7 @@
         targetNamespaces:
         - '{{ dc_b_namespace }}'
 
-- name: Evaluate AMQ Streams Operator DC - B
+- name: (DC B) Evaluate AMQ Streams Operator
   k8s:
     host: "{{ dc_b_server }}"
     api_key: "{{ dc_b_token }}"
@@ -70,116 +70,133 @@
         sourceNamespace: openshift-marketplace
         startingCSV: amqstreams.v2.2.0-3
 
-# - name: Waiting for AMQ Streams operator to install
-#   shell: set -o pipefail && oc get csv -n {{ dc_a_namespace }} | grep amqstreams
-#   register: install_status
-#   until: "'Succeeded' in install_status.stdout"
-#   retries: 20
-#   delay: 15
-#   args:
-#     executable: /bin/bash
+- name: (DC A) Login as super user with token on OpenShift 4
+  command: "oc login --token={{ dc_a_token }}  --server={{ dc_a_server }} --insecure-skip-tls-verify={{ insecure_skip_tls_verify }}"
+  ignore_errors: false
 
-# - name: Evaluate Cluster ConfigMap - DC A
-#   k8s:
-#     host: "{{ dc_a_server }}"
-#     api_key: "{{ dc_a_token }}"
-#     validate_certs: false
-#     state: present
-#     namespace: '{{ dc_a_namespace }}'
-#     resource_definition: "{{ lookup('file', 'metrics-cm.yml') }}"
+- name: (DC A) Waiting for AMQ Streams operator to install
+  shell: set -o pipefail && oc get csv -n {{ dc_a_namespace }} | grep amqstreams
+  register: install_status
+  until: "'Succeeded' in install_status.stdout"
+  retries: 20
+  delay: 15
+  args:
+    executable: /bin/bash
 
-# - name: Evaluate Cluster ConfigMap - DC B
-#   k8s:
-#     api_key: "{{ dc_b_token }}"
-#     host: "{{ dc_b_server }}"
-#     validate_certs: false
-#     state: present
-#     namespace: '{{ dc_b_namespace }}'
-#     resource_definition: "{{ lookup('file', 'metrics-cm.yml') }}"
+- name: (DC B) Login as super user with token on OpenShift 4
+  command: "oc login --token={{ dc_b_token }}  --server={{ dc_b_server }} --insecure-skip-tls-verify={{ insecure_skip_tls_verify }}"
+  ignore_errors: false
 
+- name: (DC B) Waiting for AMQ Streams operator to install
+  shell: set -o pipefail && oc get csv -n {{ dc_b_namespace }} | grep amqstreams
+  register: install_status
+  until: "'Succeeded' in install_status.stdout"
+  retries: 20
+  delay: 15
+  args:
+    executable: /bin/bash
 
-# - name: Evaluate Cluster Kafka Instance in DC A
-#   k8s:
-#     host: "{{ dc_a_server }}"
-#     api_key: "{{ dc_a_token }}"
-#     validate_certs: false
-#     state: present
-#     namespace: '{{ dc_a_namespace }}'
-#     resource_definition: "{{ lookup('template', 'kafka-cluster-a.yml.j2') }}"
+- name: (DC A) Evaluate Cluster ConfigMap
+  k8s:
+    host: "{{ dc_a_server }}"
+    api_key: "{{ dc_a_token }}"
+    validate_certs: false
+    state: present
+    namespace: '{{ dc_a_namespace }}'
+    resource_definition: "{{ lookup('file', 'metrics-cm.yml') }}"
 
-# - name: Evaluate Cluster Kafka Instance in DC B
-#   k8s:
-#     api_key: "{{ dc_b_token }}"
-#     host: "{{ dc_b_server }}"
-#     validate_certs: false
-#     state: present
-#     namespace: '{{ dc_b_namespace }}'
-#     resource_definition: "{{ lookup('template', 'kafka-cluster-b.yml.j2') }}"
+- name: (DC B) Evaluate Cluster ConfigMap
+  k8s:
+    api_key: "{{ dc_b_token }}"
+    host: "{{ dc_b_server }}"
+    validate_certs: false
+    state: present
+    namespace: '{{ dc_b_namespace }}'
+    resource_definition: "{{ lookup('file', 'metrics-cm.yml') }}"
 
 
-# - name: Login DC A as super user with token on OpenShift 4
-#   command: "oc login --token={{ dc_a_token }}  --server={{ dc_a_server }} --insecure-skip-tls-verify={{ insecure_skip_tls_verify }}"
-#   ignore_errors: false
+- name: (DC A) Evaluate Cluster Kafka Instance
+  k8s:
+    host: "{{ dc_a_server }}"
+    api_key: "{{ dc_a_token }}"
+    validate_certs: false
+    state: present
+    namespace: '{{ dc_a_namespace }}'
+    resource_definition: "{{ lookup('template', 'kafka-cluster-a.yml.j2') }}"
 
-# - name: Waiting for Kafka cluster in DC A to be ready
-#   shell: set -o pipefail && oc get kafka -n {{ dc_a_namespace }} --server={{ dc_a_server }} | grep {{ dc_a_kafka_cluster }}
-#   register: install_status
-#   until: "'True' in install_status.stdout"
-#   retries: 20
-#   delay: 15
-#   args:
-#     executable: /bin/bash
+- name: (DC B) Evaluate Cluster Kafka Instance
+  k8s:
+    api_key: "{{ dc_b_token }}"
+    host: "{{ dc_b_server }}"
+    validate_certs: false
+    state: present
+    namespace: '{{ dc_b_namespace }}'
+    resource_definition: "{{ lookup('template', 'kafka-cluster-b.yml.j2') }}"
 
-# - name: Login DC B as super user with token on OpenShift 4
-#   command: "oc login --token={{ dc_b_token }}  --server={{ dc_b_server }} --insecure-skip-tls-verify={{ insecure_skip_tls_verify }}"
-#   ignore_errors: false
 
-# - name: Waiting for Kafka cluster in DC B to be ready
-#   shell: set -o pipefail && oc get kafka -n {{ dc_b_namespace }} --server={{ dc_b_server }} | grep {{ dc_b_kafka_cluster }}
-#   register: install_status
-#   until: "'True' in install_status.stdout"
-#   retries: 20
-#   delay: 15
-#   args:
-#     executable: /bin/bash
+- name: (DC A) Login as super user with token on OpenShift 4
+  command: "oc login --token={{ dc_a_token }}  --server={{ dc_a_server }} --insecure-skip-tls-verify={{ insecure_skip_tls_verify }}"
+  ignore_errors: false
 
-# - name: Evaluate events Topic in DC A
-#   k8s:
-#     host: "{{ dc_a_server }}"
-#     api_key: "{{ dc_a_token }}"
-#     validate_certs: false
-#     state: present
-#     namespace: '{{ dc_a_namespace }}'
-#     resource_definition: "{{ lookup('template', 'events-topic.yml.j2') }}"
+- name: (DC A) Waiting for Kafka cluster to be ready
+  shell: set -o pipefail && oc get kafka -n {{ dc_a_namespace }} --server={{ dc_a_server }} | grep {{ dc_a_kafka_cluster }}
+  register: install_status
+  until: "'True' in install_status.stdout"
+  retries: 20
+  delay: 15
+  args:
+    executable: /bin/bash
 
-# - name: Install Kafka UI in DC A
-#   k8s:
-#     host: "{{ dc_a_server }}"
-#     api_key: "{{ dc_a_token }}"
-#     validate_certs: false
-#     state: present
-#     namespace: '{{ dc_a_namespace }}'
-#     resource_definition: "{{ lookup('template', 'kafka-ui-cluster-a.yml.j2') }}"
+- name: (DC B) Login as super user with token on OpenShift 4
+  command: "oc login --token={{ dc_b_token }}  --server={{ dc_b_server }} --insecure-skip-tls-verify={{ insecure_skip_tls_verify }}"
+  ignore_errors: false
 
-# - name: Install Kafka UI in DC B
-#   k8s:
-#     api_key: "{{ dc_b_token }}"
-#     host: "{{ dc_b_server }}"
-#     validate_certs: false
-#     state: present
-#     namespace: '{{ dc_b_namespace }}'
-#     resource_definition: "{{ lookup('template', 'kafka-ui-cluster-b.yml.j2') }}"
+- name: (DC B) Waiting for Kafka cluster to be ready
+  shell: set -o pipefail && oc get kafka -n {{ dc_b_namespace }} --server={{ dc_b_server }} | grep {{ dc_b_kafka_cluster }}
+  register: install_status
+  until: "'True' in install_status.stdout"
+  retries: 20
+  delay: 15
+  args:
+    executable: /bin/bash
 
-# - name: Create topic events in Kafka DC A
-#   k8s:
-#     host: "{{ dc_a_server }}"
-#     api_key: "{{ dc_a_token }}"
-#     validate_certs: false
-#     state: present
-#     namespace: '{{ dc_a_namespace }}'
-#     resource_definition: "{{ lookup('template', 'events-topic.yml.j2') }}"
+- name: (DC A) Evaluate events Topic
+  k8s:
+    host: "{{ dc_a_server }}"
+    api_key: "{{ dc_a_token }}"
+    validate_certs: false
+    state: present
+    namespace: '{{ dc_a_namespace }}'
+    resource_definition: "{{ lookup('template', 'events-topic.yml.j2') }}"
 
-# - name: Evaluate Mirror Maker in Kafka DC B
+- name: (DC A) Install Kafka UI
+  k8s:
+    host: "{{ dc_a_server }}"
+    api_key: "{{ dc_a_token }}"
+    validate_certs: false
+    state: present
+    namespace: '{{ dc_a_namespace }}'
+    resource_definition: "{{ lookup('template', 'kafka-ui-cluster-a.yml.j2') }}"
+
+- name: (DC B) Install Kafka UI
+  k8s:
+    api_key: "{{ dc_b_token }}"
+    host: "{{ dc_b_server }}"
+    validate_certs: false
+    state: present
+    namespace: '{{ dc_b_namespace }}'
+    resource_definition: "{{ lookup('template', 'kafka-ui-cluster-b.yml.j2') }}"
+
+- name: (DC A) Create topic events in Kafka
+  k8s:
+    host: "{{ dc_a_server }}"
+    api_key: "{{ dc_a_token }}"
+    validate_certs: false
+    state: present
+    namespace: '{{ dc_a_namespace }}'
+    resource_definition: "{{ lookup('template', 'events-topic.yml.j2') }}"
+
+# - name: (DC B) Evaluate Mirror Maker in Kafka
 #   k8s:
 #     api_key: "{{ dc_b_token }}"
 #     host: "{{ dc_b_server }}"
@@ -188,29 +205,29 @@
 #     namespace: '{{ dc_b_namespace }}'
 #     resource_definition: "{{ lookup('template', 'mirror-maker.yml.j2') }}"
 
-# - name: Install Producer in DC A
-#   k8s:
-#     host: "{{ dc_a_server }}"
-#     api_key: "{{ dc_a_token }}"
-#     validate_certs: false
-#     state: present
-#     namespace: '{{ dc_a_namespace }}'
-#     resource_definition: "{{ lookup('template', 'producer.yml.j2') }}"
+- name: (DC A) Install Producer
+  k8s:
+    host: "{{ dc_a_server }}"
+    api_key: "{{ dc_a_token }}"
+    validate_certs: false
+    state: present
+    namespace: '{{ dc_a_namespace }}'
+    resource_definition: "{{ lookup('template', 'producer.yml.j2') }}"
 
-# - name: Install Consumer in DC A
-#   k8s:
-#     host: "{{ dc_a_server }}"
-#     api_key: "{{ dc_a_token }}"
-#     validate_certs: false
-#     state: present
-#     namespace: '{{ dc_a_namespace }}'
-#     resource_definition: "{{ lookup('template', 'consumer-dc-a.yml.j2') }}"
+- name: (DC A) Install Consumer
+  k8s:
+    host: "{{ dc_a_server }}"
+    api_key: "{{ dc_a_token }}"
+    validate_certs: false
+    state: present
+    namespace: '{{ dc_a_namespace }}'
+    resource_definition: "{{ lookup('template', 'consumer-dc-a.yml.j2') }}"
 
-# - name: Install Consumer in DC B
-#   k8s:
-#     api_key: "{{ dc_b_token }}"
-#     host: "{{ dc_b_server }}"
-#     validate_certs: false
-#     state: present
-#     namespace: '{{ dc_b_namespace }}'
-#     resource_definition: "{{ lookup('template', 'consumer-dc-b.yml.j2') }}"
+- name: (DC B) Install Consumer
+  k8s:
+    api_key: "{{ dc_b_token }}"
+    host: "{{ dc_b_server }}"
+    validate_certs: false
+    state: present
+    namespace: '{{ dc_b_namespace }}'
+    resource_definition: "{{ lookup('template', 'consumer-dc-b.yml.j2') }}"
