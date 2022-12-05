@@ -1,43 +1,83 @@
-# - name: Evaluate Operator Group
-#   when: not delete_demo
-#   k8s:
-#     state: present
-#     api_version: operators.coreos.com/v1
-#     kind: OperatorGroup
-#     definition:
-#       metadata:
-#         name: '{{ dc_a_namespace }}-operatorgroup'
-#         namespace: '{{ dc_a_namespace}}'
-#       spec:
-#         targetNamespaces:
-#         - '{{ dc_a_namespace }}'
-#         - '{{ dc_b_namespace }}'
+- name: Evaluate Operator Group DC - A
+  host: "{{ dc_a_server }}"
+  api_key: "{{ dc_a_token }}"
+  validate_certs: false
+  k8s:
+    state: present
+    api_version: operators.coreos.com/v1
+    kind: OperatorGroup
+    definition:
+      metadata:
+        name: '{{ dc_a_namespace }}-operatorgroup'
+        namespace: '{{ dc_a_namespace}}'
+      spec:
+        targetNamespaces:
+        - '{{ dc_a_namespace }}'
 
-# - name: Evaluate AMQ Streams Operator
-#   k8s:
-#     state: present
-#     kind: Subscription
-#     api_version: operators.coreos.com/v1alpha1
-#     definition:
-#       metadata:
-#         name: amq-streams
-#         namespace: '{{ dc_a_namespace }}'
-#       spec:
-#         channel: stable
-#         installPlanApproval: Automatic
-#         name: amq-streams
-#         source: redhat-operators
-#         sourceNamespace: openshift-marketplace
-#         startingCSV: amqstreams.v2.0.0-0
+- name: Evaluate AMQ Streams Operator DC - A
+  k8s:
+    host: "{{ dc_a_server }}"
+    api_key: "{{ dc_a_token }}"
+    validate_certs: false
+    state: present
+    kind: Subscription
+    api_version: operators.coreos.com/v1alpha1
+    definition:
+      metadata:
+        name: amq-streams
+        namespace: '{{ dc_a_namespace }}'
+      spec:
+        channel: stable
+        installPlanApproval: Automatic
+        name: amq-streams
+        source: redhat-operators
+        sourceNamespace: openshift-marketplace
+        startingCSV: amqstreams.v2.2.0-3
 
-# - name: Waiting for AMQ Streams operator to install
-#   shell: set -o pipefail && oc get csv -n {{ dc_a_namespace }} | grep amqstreams
-#   register: install_status
-#   until: "'Succeeded' in install_status.stdout"
-#   retries: 20
-#   delay: 15
-#   args:
-#     executable: /bin/bash
+- name: Evaluate Operator Group - DC B
+  host: "{{ dc_b_server }}"
+  api_key: "{{ dc_b_token }}"
+  validate_certs: false
+  k8s:
+    state: present
+    api_version: operators.coreos.com/v1
+    kind: OperatorGroup
+    definition:
+      metadata:
+        name: '{{ dc_b_namespace }}-operatorgroup'
+        namespace: '{{ dc_b_namespace}}'
+      spec:
+        targetNamespaces:
+        - '{{ dc_b_namespace }}'
+
+- name: Evaluate AMQ Streams Operator DC - B
+  k8s:
+    host: "{{ dc_b_server }}"
+    api_key: "{{ dc_b_token }}"
+    validate_certs: false
+    state: present
+    kind: Subscription
+    api_version: operators.coreos.com/v1alpha1
+    definition:
+      metadata:
+        name: amq-streams
+        namespace: '{{ dc_b_namespace }}'
+      spec:
+        channel: stable
+        installPlanApproval: Automatic
+        name: amq-streams
+        source: redhat-operators
+        sourceNamespace: openshift-marketplace
+        startingCSV: amqstreams.v2.2.0-3
+
+- name: Waiting for AMQ Streams operator to install
+  shell: set -o pipefail && oc get csv -n {{ dc_a_namespace }} | grep amqstreams
+  register: install_status
+  until: "'Succeeded' in install_status.stdout"
+  retries: 20
+  delay: 15
+  args:
+    executable: /bin/bash
 
 - name: Evaluate Cluster ConfigMap - DC A
   k8s:

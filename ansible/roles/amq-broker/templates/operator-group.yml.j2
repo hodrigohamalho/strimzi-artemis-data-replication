@@ -1,9 +1,9 @@
 apiVersion: operators.coreos.com/v1
 kind: OperatorGroup
 metadata:
-  name: {{ dc_a_namespace }}-operator-group
-  namespace: {{ dc_a_namespace }}
+  name: {{ dc_a_amqbroker_namespace }}-operator-group
+  namespace: {{ dc_a_amqbroker_namespace }}
 spec:
   targetNamespaces:
-  - {{ dc_a_namespace }}
-  - {{ dc_b_namespace }}
+  - {{ dc_a_amqbroker_namespace }}
+  - {{ dc_b_amqbroker_namespace }}

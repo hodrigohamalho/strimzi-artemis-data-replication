@@ -7,8 +7,10 @@
     dc_b_kafka_cluster: my-target-cluster
     dc_a_artemis_cluster: my-source-cluster
     dc_b_artemis_cluster: my-target-cluster
-    dc_a_namespace: data-center-a
-    dc_b_namespace: data-center-b
+    dc_a_namespace: amqstreams-pre
+    dc_b_namespace: amqstreams-pre
+    dc_a_amqbroker_namespace: mqbroker-pre
+    dc_b_amqbroker_namespace: mqbroker-pre
     grafana_user: admin
     grafana_password: admin
     insecure_skip_tls_verify: true

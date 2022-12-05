@@ -12,7 +12,7 @@
 #   k8s_info:
 #     api_version: v1
 #     kind: Pod
-#     namespace: '{{ dc_a_namespace }}'
+#     namespace: '{{ dc_a_amqbroker_namespace }}'
 #     label_selectors:
 #       - name = amq-broker-operator
 #       - rht.comp = Broker_AMQ
@@ -29,7 +29,7 @@
     api_key: "{{ dc_a_token }}"
     validate_certs: false
     state: present
-    namespace: '{{ dc_a_namespace }}'
+    namespace: '{{ dc_a_amqbroker_namespace }}'
     resource_definition: "{{ lookup('template', 'artemis-cluster-a.yml.j2') }}"
 
 - name: Evaluate AMQ Broker instance - DC B
@@ -38,7 +38,7 @@
     api_key: "{{ dc_b_token }}"
     validate_certs: false
     state: present
-    namespace: '{{ dc_b_namespace }}'
+    namespace: '{{ dc_b_amqbroker_namespace }}'
     resource_definition: "{{ lookup('template', 'artemis-cluster-b.yml.j2') }}"
 
 - name: Evaluate AMQ Broker Queue - DC A
@@ -47,5 +47,5 @@
     api_key: "{{ dc_a_token }}"
     validate_certs: false
     state: present
-    namespace: '{{ dc_a_namespace }}'
+    namespace: '{{ dc_a_amqbroker_namespace }}'
     resource_definition: "{{ lookup('file', 'artemis-queue.yml') }}"
