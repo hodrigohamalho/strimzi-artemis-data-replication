@@ -11,12 +11,21 @@
     dc_b_namespace: amqstreams-pre
     dc_a_amqbroker_namespace: mqbroker-pre
     dc_b_amqbroker_namespace: mqbroker-pre
+    mirror_maker: my-mirror-maker-2
     grafana_user: admin
     grafana_password: admin
     insecure_skip_tls_verify: true
     delete_demo: false
 
   tasks:
+
+    - name: (DC A) Define domain
+      set_fact:
+        dc_a_domain : "{{ dc_a_server | regex_replace('https://api.') | regex_replace(':6443')   }}"
+
+    - name: (DC B) Define domain
+      set_fact:
+        dc_b_domain : "{{ dc_b_server | regex_replace('https://api.') | regex_replace(':6443')   }}"
 
     - name: Evaluate Data Center A Namespace
       k8s:

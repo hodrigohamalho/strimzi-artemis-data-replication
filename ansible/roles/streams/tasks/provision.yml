@@ -196,14 +196,54 @@
     namespace: '{{ dc_a_namespace }}'
     resource_definition: "{{ lookup('template', 'events-topic.yml.j2') }}"
 
-# - name: (DC B) Evaluate Mirror Maker in Kafka
-#   k8s:
-#     api_key: "{{ dc_b_token }}"
-#     host: "{{ dc_b_server }}"
-#     validate_certs: false
-#     state: present
-#     namespace: '{{ dc_b_namespace }}'
-#     resource_definition: "{{ lookup('template', 'mirror-maker.yml.j2') }}"
+- name: (DC A) Retrieve CA Cert from Source Cluster
+  k8s_info:
+    api_key: "{{ dc_a_token }}"
+    host: "{{ dc_a_server }}"
+    validate_certs: false
+    api: v1
+    kind: Secret
+    name: my-source-cluster-cluster-ca-cert
+    namespace: '{{ dc_a_namespace }}'
+  register: ca_cert_source_secret
+
+- name: Set grafana_token
+  set_fact:
+    source_data: '{{ ca_cert_source_secret.resources[0].data }}'
+    
+- name: Print return information from the previous task
+  ansible.builtin.debug:
+    var: source_data
+  
+- name: (DC B) Create CA secret from Source Cluster
+  k8s:
+    api_key: "{{ dc_b_token }}"
+    host: "{{ dc_b_server }}"
+    validate_certs: false
+    state: present
+    api_version: v1
+    kind: Secret
+    definition:
+      data: "{{ source_data }}"
+      metadata:
+        name: my-source-cluster-cluster-ca-cert
+        namespace: '{{ dc_b_namespace }}'
+        labels:
+          app.kubernetes.io/instance: '{{ dc_b_kafka_cluster }}'
+          app.kubernetes.io/name: strimzi
+          strimzi.io/cluster: '{{ dc_b_kafka_cluster }}'
+          strimzi.io/kind: Kafka
+          strimzi.io/name: strimzi
+      type: Opaque
+
+- name: (DC B) Evaluate Mirror Maker in Kafka
+  k8s:
+    api_key: "{{ dc_b_token }}"
+    host: "{{ dc_b_server }}"
+    validate_certs: false
+    state: present
+    namespace: '{{ dc_b_namespace }}'
+    resource_definition: "{{ lookup('template', 'mirror-maker.yml.j2') }}"
 
 - name: (DC A) Install Producer
   k8s:
