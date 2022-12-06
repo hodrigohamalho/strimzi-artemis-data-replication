@@ -14,7 +14,7 @@ spec:
       - secretName: my-source-cluster-cluster-ca-cert
         certificate: ca.crt
   - alias: "my-target-cluster"
-    bootstrapServers: {{ dc_b_kafka_cluster }}-kafka-bootstrap.{{ dc_b_namespace }}.svc.cluster.local:9092
+    bootstrapServers: {{ dc_b_kafka_cluster }}-kafka-bootstrap.{{ dc_b_namespace }}.svc.cluster.local:9093
     tls: 
       trustedCertificates:
       - secretName: my-target-cluster-cluster-ca-cert
